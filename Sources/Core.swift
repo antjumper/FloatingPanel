@@ -1371,7 +1371,22 @@ private class NumericSpringAnimator: NSObject {
 
     private var lock = UnfairLock()
 
-    private lazy var displayLink = CADisplayLink(target: self, selector: #selector(update(_:)))
+//    private lazy var displayLink = CADisplayLink(target: self, selector: #selector(update(_:)))
+    private lazy var displayLink: CADisplayLink = {
+        let link = CADisplayLink(target: self, selector: #selector(update(_:)))
+        if #available(iOS 15.0, *) {
+            // 完全固定 60 FPS
+            link.preferredFrameRateRange = CAFrameRateRange(
+                minimum: 60,
+                maximum: 60,
+                preferred: 60
+            )
+        } else {
+            // iOS 14 and earlier
+            link.preferredFramesPerSecond = 60
+        }
+        return link
+    }()
 
     private var data: Data
 
@@ -1390,7 +1405,6 @@ private class NumericSpringAnimator: NSObject {
          responseTime: CGFloat,
          update: @escaping ((_ data: Data) -> Void),
          completion: @escaping (() -> Void)) {
-
         self.data = initialData
         self.target = target
         self.displayScale = displayScale
